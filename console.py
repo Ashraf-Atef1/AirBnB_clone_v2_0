@@ -3,7 +3,7 @@
     the entry point of the command interpreter"""
 import cmd
 import re
-from json import loads, dumps
+from json import loads
 from models import storage
 
 
@@ -50,8 +50,10 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """create command to Creates a new instance and prints the id"""
-        if self.args_check(args, 1):
-            obj = storage.create_object(args)()
+        args = args.split()
+        if self.args_check(args[0], 1):
+            obj = storage.create_object(args[0])()
+            self.add_args(obj, args[1:])
             obj.save()
             print(obj.id)
 
@@ -181,6 +183,18 @@ class HBNBCommand(cmd.Cmd):
         else:
             return print("** instance id missing **")
 
+    @staticmethod
+    def add_args(obj, args):
+        """Check args and add them to the new instance"""
+        for arg in args:
+            arg = arg.split('=')
+            if len(arg) != 2:
+                continue
+            key, value = arg
+            value = re.findall('^("([^ ]*)"|-?[0-9]+([.][0-9]+)?)$', value)
+            if value:
+                value = loads(value[0][0].replace("_", " "))
+                setattr(obj, key, value)
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
